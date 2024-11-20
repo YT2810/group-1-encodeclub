@@ -3,15 +3,11 @@ pragma solidity ^0.8.19;
 
 // Useful for debugging. Remove when deploying to a live network.
 import "forge-std/console.sol";
-
-// Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
-// import "@openzeppelin/contracts/access/Ownable.sol";
-
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 enum State { AWAITING_PAYMENT, AWAITING_DELIVERY, COMPLETE, REFUNDED }
 
-contract MultiEscrow {
-
+contract MultiEscrow is ReentrancyGuard {
     struct Escrow {
         address payer;
         address payee;
@@ -65,13 +61,13 @@ contract MultiEscrow {
         emit FundDeposited(escrowId, msg.sender, msg.value);
     }
 
-    function releaseFunds(uint256 escrowId) external onlyArbiter(escrowId) inState(escrowId, State.AWAITING_DELIVERY) {
+    function releaseFunds(uint256 escrowId) external onlyArbiter(escrowId) inState(escrowId, State.AWAITING_DELIVERY) nonReentrant {
         escrows[escrowId].currentState = State.COMPLETE;
         payable(escrows[escrowId].payee).transfer(escrows[escrowId].amount);
         emit FundReleased(escrowId, escrows[escrowId].payee, escrows[escrowId].amount);
     }
 
-    function refund(uint256 escrowId) external onlyArbiter(escrowId) inState(escrowId, State.AWAITING_DELIVERY) {
+    function refund(uint256 escrowId) external onlyArbiter(escrowId) inState(escrowId, State.AWAITING_DELIVERY) nonReentrant {
         escrows[escrowId].currentState = State.REFUNDED;
         payable(escrows[escrowId].payer).transfer(escrows[escrowId].amount);
         emit FundRefunded(escrowId, escrows[escrowId].payer, escrows[escrowId].amount);
