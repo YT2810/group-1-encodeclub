@@ -20,8 +20,6 @@ contract MultiEscrow {
         State currentState;
     }
 
-    enum State { AWAITING_PAYMENT, AWAITING_DELIVERY, COMPLETE, REFUNDED }
-
     mapping(uint256 => Escrow) public escrows;
     uint256 public escrowCount;
 
@@ -29,18 +27,16 @@ contract MultiEscrow {
     event FundReleased(uint256 indexed escrowId, address indexed payee, uint256 amount);
     event FundRefunded(uint256 indexed escrowId, address indexed payer, uint256 amount);
 
-    error PayerPermissionRequired();
-    error ArbiterPermissionRequired();
     error InvalidState(State expected, State current);
     error IncorrectDepositAmount(uint256 expected, uint256 actual);
 
     modifier onlyPayer(uint256 escrowId) {
-        require(msg.sender == escrows[escrowId].payer, PayerPermissionRequired);
+        require(msg.sender == escrows[escrowId].payer, "Payer Permission Required");
         _;
     }
 
     modifier onlyArbiter(uint256 escrowId) {
-        require(msg.sender == escrows[escrowId].arbiter, ArbiterPermissionRequired);
+        require(msg.sender == escrows[escrowId].arbiter, "Arbiter Permission Required");
         _;
     }
 
