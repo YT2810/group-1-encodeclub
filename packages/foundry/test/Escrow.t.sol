@@ -17,6 +17,7 @@ contract MultiEscrowTest is Test {
         arbiter = address(0x3); // Mock arbiter address
 
         vm.deal(payer, 10 ether); // Assign initial funds to the payer
+        vm.deal(payee, 0 ether); // Initialize payee's balance
         escrow = new MultiEscrow();
     }
 
@@ -60,6 +61,31 @@ contract MultiEscrowTest is Test {
         assertEq(uint256(retrievedState), uint256(State.AWAITING_DELIVERY), "State mismatch after deposit");
     }
 
+    function testReleaseFunds() public {
+        // Define the amount and create an escrow
+        uint256 amount = 1 ether;
+        vm.prank(payer); // Simulate the payer's transaction
+        uint256 escrowId = escrow.createEscrow(payee, arbiter, amount);
 
+        // Deposit funds to the escrow
+        vm.prank(payer);
+        escrow.deposit{value: amount}(escrowId);
 
+        // Simulate the arbiter releasing funds
+        vm.expectEmit(true, true, true, true);
+        emit MultiEscrow.FundReleased(escrowId, payee, amount); // Expected event with full qualifier
+        vm.prank(arbiter); // Ensure the caller matches the `arbiter`
+        escrow.releaseFunds(escrowId);
+
+        // Validate the updated state
+        (
+            , , , , State retrievedState
+        ) = escrow.escrows(escrowId);
+
+        assertEq(uint256(retrievedState), uint256(State.COMPLETE), "State mismatch after releasing funds");
+
+        // Validate that the payee received the funds
+        assertEq(payee.balance, amount, "Payee did not receive the correct amount");
+    }
 }
+

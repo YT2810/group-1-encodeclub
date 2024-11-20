@@ -53,7 +53,7 @@ contract MultiEscrow is ReentrancyGuard {
         return escrowCount;
     }
 
-    function deposit(uint256 escrowId) external payable onlyPayer(escrowId) inState(escrowId, State.AWAITING_PAYMENT) {
+    function deposit(uint256 escrowId) external payable onlyPayer(escrowId) inState(escrowId, State.AWAITING_PAYMENT)  {
         if (msg.value != escrows[escrowId].amount) {
             revert IncorrectDepositAmount(escrows[escrowId].amount, msg.value);
         }
