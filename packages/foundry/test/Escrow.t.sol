@@ -87,5 +87,41 @@ contract MultiEscrowTest is Test {
         // Validate that the payee received the funds
         assertEq(payee.balance, amount, "Payee did not receive the correct amount");
     }
+
+    function testRefund() public {
+    // Define the amount and create an escrow
+    uint256 amount = 1 ether;
+    vm.prank(payer); // Simulate the payer's transaction
+    uint256 escrowId = escrow.createEscrow(payee, arbiter, amount);
+
+    // Simulate the payer depositing funds
+    vm.prank(payer);
+    escrow.deposit{value: amount}(escrowId);
+
+    // Obtener balance inicial del payer
+    uint256 initialPayerBalance = payer.balance;
+
+    // Esperar el evento FundRefunded
+    vm.expectEmit(true, true, true, true);
+    emit MultiEscrow.FundRefunded(escrowId, payer, amount);
+
+    // Simulate the arbiter calling the refund function
+    vm.prank(arbiter);
+    escrow.refund(escrowId);
+
+    // Validate the updated state
+    (
+        address retrievedPayer, , , uint256 retrievedAmount, State retrievedState
+    ) = escrow.escrows(escrowId);
+
+    assertEq(retrievedPayer, payer, "Payer address mismatch after refund");
+    assertEq(retrievedAmount, amount, "Escrow amount mismatch after refund");
+    assertEq(uint256(retrievedState), uint256(State.REFUNDED), "State mismatch after refund");
+
+    // Validar que el payer recibió los fondos correctamente
+    assertEq(payer.balance, initialPayerBalance + amount, "Payer did not receive the refunded amount");
+}
+
+
 }
 

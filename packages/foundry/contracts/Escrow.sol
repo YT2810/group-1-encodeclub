@@ -68,8 +68,14 @@ contract MultiEscrow is ReentrancyGuard {
     }
 
     function refund(uint256 escrowId) external onlyArbiter(escrowId) inState(escrowId, State.AWAITING_DELIVERY) nonReentrant {
-        escrows[escrowId].currentState = State.REFUNDED;
-        payable(escrows[escrowId].payer).transfer(escrows[escrowId].amount);
-        emit FundRefunded(escrowId, escrows[escrowId].payer, escrows[escrowId].amount);
+        Escrow storage escrow = escrows[escrowId];
+        uint256 amount = escrow.amount;
+        escrow.currentState = State.REFUNDED;
+
+        (bool success, ) = escrow.payer.call{value: amount}("");
+        require(success, "Refund failed");
+
+        emit FundRefunded(escrowId, escrow.payer, amount);
     }
+
 }
