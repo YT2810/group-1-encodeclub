@@ -1,7 +1,9 @@
 [profile.default]
+via_ir = true
 src = 'contracts'
 out = 'out'
 libs = ['lib']
+optimizer_pipeline = "via-ir"
 fs_permissions = [{ access = "read-write", path = "./"}]
 libPaths = ["./packages/foundry/lib"]
 remappings = [
