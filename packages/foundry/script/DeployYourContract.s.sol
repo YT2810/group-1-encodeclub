@@ -7,7 +7,7 @@ import "./DeployHelpers.s.sol";
 contract DeployYourContract is ScaffoldETHDeploy {
   // use `deployer` from `ScaffoldETHDeploy`
   function run() external ScaffoldEthDeployerRunner {
-    Escrow escrowContract = new Escrow();
+    MultiEscrow escrowContract = new MultiEscrow();
     console.logString(
       string.concat(
         "Escrow deployed at: ", vm.toString(address(escrowContract))
