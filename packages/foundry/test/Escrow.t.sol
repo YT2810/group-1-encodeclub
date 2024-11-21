@@ -121,5 +121,31 @@ contract MultiEscrowTest is Test {
         assertEq(payer.balance, 10 ether, "Payer did not receive the correct amount after refund");
     }
 
+    function testDepositFromNonPayer() public {
+        uint256 amount = 1 ether;
+        vm.prank(payer); // Simula la transacción desde el `payer`
+        uint256 escrowId = escrow.createEscrow(payee, arbiter, amount);
+
+        // Simula un intento de depósito por parte de un usuario no autorizado
+        vm.prank(payee); 
+        vm.expectRevert("Payer Permission Required"); // Mensaje literal esperado
+        escrow.deposit{value: amount}(escrowId);
+    }
+
+
+    function testReleaseFundsFromNonArbiter() public {
+        uint256 amount = 1 ether;
+        vm.prank(payer);
+        uint256 escrowId = escrow.createEscrow(payee, arbiter, amount);
+        vm.prank(payer);
+        escrow.deposit{value: amount}(escrowId);
+
+        // Simulate a non-arbiter trying to release funds
+        vm.prank(payee); 
+        vm.expectRevert("Arbiter Permission Required");
+        escrow.releaseFunds(escrowId);
+    }
+
 }
+
 
